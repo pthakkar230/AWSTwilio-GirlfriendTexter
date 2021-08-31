@@ -69,3 +69,14 @@ Resources:
           - TexterLambda
           - Arn
       State: ENABLED
+  TextGirlfriendScheduleInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: TexterLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+        - TextGirlfriendSchedule
+        - Arn
