@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda function with cfn-response.
+Parameters:
+  TwilioAccountSID:
+    Type: String
+  TwilioAuthToken:
+    Type: String
+  SourcePhoneNumber:
+    Type: String
+  DestinationPhoneNumber:
+    Type: String
+Resources:
+  TexterLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs12.x
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Handler: index.handler
+      Timeout: 10
+      MemorySize: 256
+      Environment:
+        Variables:
+          TWILIO_ACCOUNT_SID: !Ref TwilioAccountSID
+          TWILIO_AUTH_TOKEN: !Ref TwilioAuthToken
+          SOURCE_PHONE_NUMBER: !Ref SourcePhoneNumber
+          DESTINATION_PHONE_NUMBER: !Ref DestinationPhoneNumber
+      Code:
+        S3Bucket: girlfriendtestercodetest
+        S3Key: GirlfriendTexterCode
+      Description: Invoke a function during stack creation.
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: TwilioLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: AWSLambdaBasicExecutionRole
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: "*"
+  TextGirlfriendSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: TextGirlfriend
+      Description: Text my girlfriend
+      ScheduleExpression: rate(2 minutes)
+      Targets:
+      - Id: TextGirlfriendTarget
+        Arn:
+          Fn::GetAtt:
+          - TexterLambda
+          - Arn
+      State: ENABLED
